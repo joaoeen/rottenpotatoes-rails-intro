@@ -12,6 +12,21 @@ class MoviesController < ApplicationController
 
   def index
     @all_ratings = Movie.ratings
+    if params.include?(:format)
+      session[:format] = params[:format]
+    end
+    
+    if params.include?(:ratings)
+      session[:ratings]=params[:ratings]
+    end
+    
+    if  session[:format] != params[:format] or session[:ratings]!=params[:ratings]
+      flash.keep
+      redirect_to movies_path(:format => session[:format], :ratings => session[:ratings])
+    end
+    
+
+    
     if params.include?(:ratings)
       @rating_filter = params[:ratings].keys
     elsif params.include?(:commit)
@@ -20,11 +35,10 @@ class MoviesController < ApplicationController
       @rating_filter = @all_ratings
     end
 
-    
     if params[:format] == "sort_by_title"
-      @movies = Movie.all.order(:title)
+      @movies = Movie.where({rating: @rating_filter}).order(:title)
     elsif params[:format] == "sort_by_release_date"
-      @movies = Movie.all.order(:release_date)
+      @movies = Movie.where({rating: @rating_filter}).order(:release_date)
     else
       @movies = Movie.where({rating: @rating_filter})
     end
